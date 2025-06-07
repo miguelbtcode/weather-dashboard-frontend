@@ -9,7 +9,7 @@ import { ForecastSection } from "./ForecastSection";
 import { OtherCities } from "./OtherCities";
 import { AnimatedBackground, WeatherGlow } from "./AnimatedBackground";
 import { AutoLocationDetection } from "./AutoLocationDetection";
-import { WeatherLoading, ErrorState } from "./ui/LoadingStates";
+import { WeatherLoading, ErrorState } from "./UI/LoadingStates";
 import { useWeather } from "../context/WeatherContext";
 import {
   Zap,

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search, MapPin, Clock, Navigation, Navigation2 } from "lucide-react";
-import { LoadingSpinner } from "./ui/LoadingStates";
+import { LoadingSpinner } from "./UI/LoadingStates";
 import { useWeather } from "../context/WeatherContext";
 import { useGeolocation } from "../hooks/useGeolocation";
 
