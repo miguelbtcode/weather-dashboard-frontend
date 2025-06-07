@@ -48,12 +48,12 @@ export const EnhancedWeatherSection = () => {
   if (!currentWeather) return null;
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       {/* Weather Alerts */}
       {preferences.showAlerts && <WeatherAlertsWidget />}
 
       {/* Current Weather Overview */}
-      <section className="animate-slide-up-delay-2">
+      <section className="animate-slide-up-delay-1">
         <SectionControls
           title="Current Overview"
           isExpanded={sectionsExpanded.overview}
@@ -67,6 +67,77 @@ export const EnhancedWeatherSection = () => {
             main: (
               <div className="space-y-8">
                 <CurrentWeatherCard />
+                {/* Enhanced Forecast Section */}
+                <section className="animate-slide-up-delay-2">
+                  <SectionControls
+                    title="Weather Forecast"
+                    isExpanded={sectionsExpanded.forecast}
+                    onToggle={() => toggleSection("forecast")}
+                    onSettings={() => handleSettings("forecast")}
+                    onShare={() => handleShare("forecast")}
+                  />
+
+                  <div className="glass rounded-3xl p-8 shadow-weather transition-all duration-500 hover:shadow-weather-lg border border-white/10">
+                    <EnhancedForecastSection
+                      isExpanded={sectionsExpanded.forecast}
+                    />
+                  </div>
+                </section>
+
+                {/* Analytics Section */}
+                <section className="animate-slide-up-delay-3">
+                  <SectionControls
+                    title="Weather Analytics"
+                    isExpanded={sectionsExpanded.analytics}
+                    onToggle={() => toggleSection("analytics")}
+                    onSettings={() => handleSettings("analytics")}
+                    onShare={() => handleShare("analytics")}
+                  />
+
+                  {sectionsExpanded.analytics && (
+                    <div className="glass rounded-3xl p-8 shadow-weather transition-all duration-500 hover:shadow-weather-lg border border-white/10">
+                      <div className="text-center py-12">
+                        <BarChart3
+                          className="text-white/50 mx-auto mb-4"
+                          size={64}
+                        />
+                        <h3 className="text-xl font-semibold text-white mb-2">
+                          Advanced Weather Analytics
+                        </h3>
+                        <p className="text-white/70 mb-6">
+                          Detailed weather patterns, historical trends, and
+                          predictive insights
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="bg-white/5 rounded-xl p-6">
+                            <h4 className="text-white font-medium mb-2">
+                              Trend Analysis
+                            </h4>
+                            <p className="text-white/60 text-sm">
+                              7-day temperature and precipitation patterns
+                            </p>
+                          </div>
+                          <div className="bg-white/5 rounded-xl p-6">
+                            <h4 className="text-white font-medium mb-2">
+                              Seasonal Comparison
+                            </h4>
+                            <p className="text-white/60 text-sm">
+                              Compare current conditions with seasonal averages
+                            </p>
+                          </div>
+                          <div className="bg-white/5 rounded-xl p-6">
+                            <h4 className="text-white font-medium mb-2">
+                              Climate Insights
+                            </h4>
+                            <p className="text-white/60 text-sm">
+                              Long-term climate patterns and projections
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </section>
               </div>
             ),
             sidebar: (
@@ -85,73 +156,6 @@ export const EnhancedWeatherSection = () => {
             ),
           }}
         </SmartLayoutGrid>
-      </section>
-
-      {/* Enhanced Forecast Section */}
-      <section className="animate-slide-up-delay-3">
-        <SectionControls
-          title="Weather Forecast"
-          isExpanded={sectionsExpanded.forecast}
-          onToggle={() => toggleSection("forecast")}
-          onSettings={() => handleSettings("forecast")}
-          onShare={() => handleShare("forecast")}
-        />
-
-        <div className="glass rounded-3xl p-8 shadow-weather transition-all duration-500 hover:shadow-weather-lg border border-white/10">
-          <EnhancedForecastSection isExpanded={sectionsExpanded.forecast} />
-        </div>
-      </section>
-
-      {/* Analytics Section */}
-      <section className="animate-slide-up-delay-4">
-        <SectionControls
-          title="Weather Analytics"
-          isExpanded={sectionsExpanded.analytics}
-          onToggle={() => toggleSection("analytics")}
-          onSettings={() => handleSettings("analytics")}
-          onShare={() => handleShare("analytics")}
-        />
-
-        {sectionsExpanded.analytics && (
-          <div className="glass rounded-3xl p-8 shadow-weather transition-all duration-500 hover:shadow-weather-lg border border-white/10">
-            <div className="text-center py-12">
-              <BarChart3 className="text-white/50 mx-auto mb-4" size={64} />
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Advanced Weather Analytics
-              </h3>
-              <p className="text-white/70 mb-6">
-                Detailed weather patterns, historical trends, and predictive
-                insights
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white/5 rounded-xl p-6">
-                  <h4 className="text-white font-medium mb-2">
-                    Trend Analysis
-                  </h4>
-                  <p className="text-white/60 text-sm">
-                    7-day temperature and precipitation patterns
-                  </p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-6">
-                  <h4 className="text-white font-medium mb-2">
-                    Seasonal Comparison
-                  </h4>
-                  <p className="text-white/60 text-sm">
-                    Compare current conditions with seasonal averages
-                  </p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-6">
-                  <h4 className="text-white font-medium mb-2">
-                    Climate Insights
-                  </h4>
-                  <p className="text-white/60 text-sm">
-                    Long-term climate patterns and projections
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </section>
     </div>
   );
