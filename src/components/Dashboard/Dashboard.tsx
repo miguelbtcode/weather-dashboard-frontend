@@ -5,6 +5,7 @@ import { WeatherSection } from "./WeatherSection";
 import { AutoLocationPrompt } from "../Weather/AutoLocationPrompt";
 import { LoadingOverlay } from "../UI/LoadingOverlay";
 import { ErrorToast } from "../UI/ErrorToast";
+import { EnhancedWeatherSection } from "./EnhancedWeatherSection/EnhancedWeatherSection";
 
 export const Dashboard: React.FC = () => {
   const { currentWeather, loading, error, clearError } = useWeather();
@@ -13,7 +14,7 @@ export const Dashboard: React.FC = () => {
     <>
       <AutoLocationPrompt />
 
-      {currentWeather ? <WeatherSection /> : <WelcomeSection />}
+      {currentWeather ? <EnhancedWeatherSection /> : <WelcomeSection />}
 
       {loading && currentWeather && <LoadingOverlay />}
       {error && currentWeather && (

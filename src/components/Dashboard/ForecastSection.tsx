@@ -12,8 +12,8 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
-import { useWeather } from "../context/WeatherContext";
-import { useTemperature } from "../utils/temperatureUtils";
+import { useWeather } from "../../context/WeatherContext";
+import { useTemperature } from "../../utils/temperatureUtils";
 
 export const ForecastSection: React.FC = () => {
   const { forecast, tempUnit } = useWeather();

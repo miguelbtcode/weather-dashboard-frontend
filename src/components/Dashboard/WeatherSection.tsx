@@ -6,9 +6,10 @@ import { SavedCitiesCard } from "../Weather/SavedCitiesCard";
 import { WeatherInsightsCard } from "../Weather/WeatherInsightsCard";
 import { QuickStatsCard } from "../Weather/QuickStatsCard";
 import { useWeather } from "../../context/WeatherContext";
+import { ForecastSection } from "./ForecastSection";
 
 export const WeatherSection: React.FC = () => {
-  const { currentWeather } = useWeather();
+  const { currentWeather, viewMode } = useWeather();
 
   if (!currentWeather) return null;
 
@@ -26,6 +27,15 @@ export const WeatherSection: React.FC = () => {
           <section className="animate-slide-up-delay-3">
             <ForecastCard />
           </section>
+
+          {/* Extended Forecast Section */}
+          {viewMode === "week" && (
+            <section className="animate-slide-up-delay-4">
+              <div className="glass rounded-3xl p-8 shadow-weather transition-all duration-500 hover:shadow-weather-lg border border-white/10">
+                <ForecastSection />
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Sidebar */}
