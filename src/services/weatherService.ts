@@ -1,5 +1,3 @@
-// src/services/weatherService.ts (Versión mejorada)
-
 import {
   WeatherResponse,
   ForecastResponse,

@@ -8,7 +8,6 @@ import {
   CloudLightning,
   Wind,
   CloudDrizzle,
-  Cloudy,
 } from "lucide-react";
 
 interface WeatherIconProps {

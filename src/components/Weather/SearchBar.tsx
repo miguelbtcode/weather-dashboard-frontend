@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Search, MapPin, Clock, Navigation, Navigation2 } from "lucide-react";
-import { LoadingSpinner } from "./UI/LoadingStates";
-import { useWeather } from "../context/WeatherContext";
-import { useGeolocation } from "../hooks/useGeolocation";
+import { Search, MapPin, Clock, Navigation2 } from "lucide-react";
+import { LoadingSpinner } from "../UI/LoadingStates";
+import { useWeather } from "../../context/WeatherContext";
+import { useGeolocation } from "../../hooks/useGeolocation";
 
 export const SearchBar: React.FC = () => {
   const [query, setQuery] = useState("");

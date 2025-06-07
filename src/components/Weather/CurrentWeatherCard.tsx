@@ -11,6 +11,7 @@ import {
 import { useWeather } from "../../context/WeatherContext";
 import { useWeatherTheme, applyWeatherTheme } from "../../utils/weatherThemes";
 import { useTemperature } from "../../utils/temperatureUtils";
+import { getWeatherInsight } from "../../utils/weather";
 import { Button } from "../UI/Button";
 import { WeatherCard } from "./WeatherCard";
 import { WeatherIcon } from "../UI/WeatherIcon";

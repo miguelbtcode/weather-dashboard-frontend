@@ -1,4 +1,3 @@
-// Respuesta del backend para clima actual
 export interface WeatherResponse {
   success: boolean;
   message: string;

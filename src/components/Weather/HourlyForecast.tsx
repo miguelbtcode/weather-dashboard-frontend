@@ -10,8 +10,8 @@ import {
   Wind,
   Droplets,
 } from "lucide-react";
-import { useWeather } from "../context/WeatherContext";
-import { useTemperature } from "../utils/temperatureUtils";
+import { useWeather } from "../../context/WeatherContext";
+import { useTemperature } from "../../utils/temperatureUtils";
 
 export const HourlyForecast: React.FC = () => {
   const { hourlyForecast, forecast, tempUnit, viewMode, setViewMode } =

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useWeatherTheme } from "../utils/weatherThemes";
+import { useWeatherTheme } from "../../utils/weatherThemes";
 
 interface AnimatedBackgroundProps {
   weatherCode?: string;
