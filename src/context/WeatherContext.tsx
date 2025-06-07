@@ -158,6 +158,10 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
       temp: item.main.temp,
       weather: item.weather,
       pop: item.pop || 0,
+      humidity: item.main.humidity,
+      pressure: item.main.pressure,
+      wind_speed: item.wind?.speed,
+      feels_like: item.main.feels_like,
     }));
   };
 

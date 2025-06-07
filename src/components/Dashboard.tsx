@@ -18,6 +18,7 @@ import {
   Cloud,
   Sun,
   AlertTriangle,
+  CloudRain,
 } from "lucide-react";
 
 export const Dashboard: React.FC = () => {

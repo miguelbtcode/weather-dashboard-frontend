@@ -193,10 +193,16 @@ export interface HourlyForecastItem {
   dt: number;
   temp: number;
   weather: Array<{
+    id: number;
     main: string;
     description: string;
     icon: string;
   }>;
+  pop: number; // Probability of precipitation (0-1)
+  humidity?: number;
+  pressure?: number;
+  wind_speed?: number;
+  feels_like?: number;
 }
 
 export interface SavedCity {

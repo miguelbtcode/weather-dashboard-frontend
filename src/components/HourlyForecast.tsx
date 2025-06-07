@@ -94,30 +94,62 @@ export const HourlyForecast: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 mt-6">
         {hourlyForecast.slice(0, 12).map((hour, index) => {
           const tempDisplay = useTemperature(hour.temp, tempUnit);
+          const isNow = index === 0;
 
           return (
             <div
               key={index}
-              className="glass rounded-xl p-4 flex flex-col items-center hover:bg-white/20 transition-all duration-300 weather-card"
+              className={`glass rounded-xl p-4 flex flex-col items-center hover:bg-white/20 transition-all duration-300 weather-card ${
+                isNow ? "ring-2 ring-blue-400/50 bg-white/15" : ""
+              }`}
             >
-              <p className="text-white/80 mb-2 text-sm font-medium">
-                {formatTime(hour.dt)}
+              <p
+                className={`mb-2 text-sm font-medium ${
+                  isNow ? "text-blue-200" : "text-white/80"
+                }`}
+              >
+                {isNow ? "Now" : formatTime(hour.dt)}
               </p>
 
               <div className="my-3 relative">
                 {getWeatherIcon(hour.weather[0].icon, 28)}
+                {isNow && (
+                  <div className="absolute -inset-2 bg-blue-400/20 rounded-full animate-pulse" />
+                )}
               </div>
 
               <p className="text-lg font-bold text-white mb-1">
                 {Math.round(tempDisplay.displayTemp)}°
               </p>
 
+              {/* Weather description for current hour */}
+              {isNow && (
+                <p className="text-xs text-white/70 text-center capitalize mb-2">
+                  {hour.weather[0].description}
+                </p>
+              )}
+
+              {/* Precipitation probability */}
               {hour.pop > 0 && (
                 <div className="flex items-center text-blue-300 text-xs">
                   <Droplets size={12} className="mr-1" />
                   <span>{Math.round(hour.pop * 100)}%</span>
                 </div>
               )}
+
+              {/* Additional info on hover for larger screens */}
+              <div className="hidden lg:block opacity-0 hover:opacity-100 transition-opacity duration-200 absolute bottom-0 left-0 right-0 bg-black/80 rounded-b-xl p-2 text-xs text-white">
+                {hour.humidity && <div>Humidity: {hour.humidity}%</div>}
+                {hour.feels_like && (
+                  <div>
+                    Feels:{" "}
+                    {Math.round(
+                      useTemperature(hour.feels_like, tempUnit).displayTemp
+                    )}
+                    °
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
