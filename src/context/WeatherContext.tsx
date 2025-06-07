@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState } from "react";
+// src/context/WeatherContext.tsx (Versión mejorada)
+
+import React, { createContext, useContext, useState, useEffect } from "react";
 import weatherService from "../services/weatherService";
+import { TemperatureUnit } from "../utils/temperatureUtils";
 import {
   CurrentWeather,
   ForecastItem,
@@ -7,7 +10,7 @@ import {
   SavedCity,
 } from "../types/weather";
 
-type WeatherUnit = "metric" | "imperial";
+type ViewMode = "today" | "week";
 
 interface WeatherContextType {
   currentWeather: CurrentWeather | null;
@@ -16,11 +19,17 @@ interface WeatherContextType {
   savedCities: SavedCity[];
   loading: boolean;
   error: string | null;
-  tempUnit: WeatherUnit;
+  tempUnit: TemperatureUnit;
+  viewMode: ViewMode;
+  lastUpdated: Date | null;
   searchCity: (city: string) => Promise<void>;
   searchByCoords: (lat: number, lon: number) => Promise<void>;
   switchToCity: (city: string) => Promise<void>;
-  setTempUnit: (unit: WeatherUnit) => void;
+  setTempUnit: (unit: TemperatureUnit) => void;
+  setViewMode: (mode: ViewMode) => void;
+  refreshWeather: () => Promise<void>;
+  clearError: () => void;
+  removeSavedCity: (cityName: string) => void;
 }
 
 const WeatherContext = createContext<WeatherContextType | undefined>(undefined);
@@ -38,7 +47,53 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
   const [savedCities, setSavedCities] = useState<SavedCity[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [tempUnit, setTempUnit] = useState<WeatherUnit>("metric");
+  const [tempUnit, setTempUnitState] = useState<TemperatureUnit>("metric");
+  const [viewMode, setViewModeState] = useState<ViewMode>("today");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{
+    city: string;
+    coords?: { lat: number; lon: number };
+  } | null>(null);
+
+  // Persistir configuraciones en localStorage
+  useEffect(() => {
+    const savedUnit = localStorage.getItem(
+      "temperatureUnit"
+    ) as TemperatureUnit;
+    const savedViewMode = localStorage.getItem("viewMode") as ViewMode;
+    const savedCitiesData = localStorage.getItem("savedCities");
+
+    if (savedUnit && (savedUnit === "metric" || savedUnit === "imperial")) {
+      setTempUnitState(savedUnit);
+    }
+
+    if (
+      savedViewMode &&
+      (savedViewMode === "today" || savedViewMode === "week")
+    ) {
+      setViewModeState(savedViewMode);
+    }
+
+    if (savedCitiesData) {
+      try {
+        const cities = JSON.parse(savedCitiesData);
+        setSavedCities(cities);
+      } catch (e) {
+        console.error("Error loading saved cities:", e);
+      }
+    }
+  }, []);
+
+  // Guardar configuraciones
+  const setTempUnit = (unit: TemperatureUnit) => {
+    setTempUnitState(unit);
+    localStorage.setItem("temperatureUnit", unit);
+  };
+
+  const setViewMode = (mode: ViewMode) => {
+    setViewModeState(mode);
+    localStorage.setItem("viewMode", mode);
+  };
 
   // Función para transformar respuesta del backend a formato del frontend
   const transformWeatherData = (backendData: any): CurrentWeather => {
@@ -52,31 +107,49 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
       weather: backendData.weather,
       temp_max: backendData.main.temp_max,
       temp_min: backendData.main.temp_min,
-      uvi: 5, // Valor por defecto, ya que OpenWeather no incluye UV en basic plan
+      uvi: 5, // Valor por defecto
+      pressure: backendData.main.pressure,
+      visibility: backendData.visibility || 10000,
     };
   };
 
   const transformForecastData = (backendData: any[]): ForecastItem[] => {
-    // Agrupar por día y tomar el primer pronóstico de cada día
-    const dailyData: { [key: string]: any } = {};
+    // Agrupar por día
+    const dailyData: { [key: string]: any[] } = {};
 
     backendData.forEach((item) => {
       const date = new Date(item.dt * 1000).toDateString();
       if (!dailyData[date]) {
-        dailyData[date] = item;
+        dailyData[date] = [];
       }
+      dailyData[date].push(item);
     });
 
-    return Object.values(dailyData)
-      .slice(0, 5)
-      .map((item: any) => ({
-        dt: item.dt,
-        temp: {
-          min: item.main.temp_min,
-          max: item.main.temp_max,
-        },
-        weather: item.weather,
-      }));
+    return Object.entries(dailyData)
+      .slice(0, 7) // 7 días para la vista semanal
+      .map(([date, items]) => {
+        // Calcular min/max del día
+        const temps = items.map((item) => item.main.temp);
+        const tempMin = Math.min(...temps);
+        const tempMax = Math.max(...temps);
+
+        // Usar el pronóstico del mediodía (12:00) o el más cercano
+        const noonForecast =
+          items.find((item) => {
+            const hour = new Date(item.dt * 1000).getHours();
+            return hour >= 11 && hour <= 13;
+          }) || items[Math.floor(items.length / 2)];
+
+        return {
+          dt: noonForecast.dt,
+          temp: {
+            min: tempMin,
+            max: tempMax,
+          },
+          weather: noonForecast.weather,
+          pop: noonForecast.pop || 0,
+        };
+      });
   };
 
   const transformHourlyData = (backendData: any[]): HourlyForecastItem[] => {
@@ -84,7 +157,35 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
       dt: item.dt,
       temp: item.main.temp,
       weather: item.weather,
+      pop: item.pop || 0,
     }));
+  };
+
+  const addToSavedCities = (weather: CurrentWeather) => {
+    const cityExists = savedCities.some(
+      (c) => c.name.toLowerCase() === weather.name.toLowerCase()
+    );
+
+    if (!cityExists) {
+      const newCity: SavedCity = {
+        name: weather.name,
+        country: "XX",
+        temp: Math.round(weather.temp),
+        weather: weather.weather,
+      };
+
+      const updatedCities = [newCity, ...savedCities].slice(0, 6); // Máximo 6 ciudades
+      setSavedCities(updatedCities);
+      localStorage.setItem("savedCities", JSON.stringify(updatedCities));
+    }
+  };
+
+  const removeSavedCity = (cityName: string) => {
+    const updatedCities = savedCities.filter(
+      (city) => city.name.toLowerCase() !== cityName.toLowerCase()
+    );
+    setSavedCities(updatedCities);
+    localStorage.setItem("savedCities", JSON.stringify(updatedCities));
   };
 
   const searchCity = async (city: string) => {
@@ -105,6 +206,7 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const transformedWeather = transformWeatherData(weatherResponse.data);
       setCurrentWeather(transformedWeather);
+      setCurrentLocation({ city, coords: undefined });
 
       // Obtener pronóstico
       try {
@@ -124,8 +226,9 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
         console.warn("No se pudo obtener el pronóstico:", forecastError);
       }
 
-      // Agregar a ciudades guardadas si no existe
+      // Agregar a ciudades guardadas
       addToSavedCities(transformedWeather);
+      setLastUpdated(new Date());
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Error desconocido";
@@ -142,7 +245,10 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       // Obtener clima actual por coordenadas
-      const weatherResponse = await weatherService.getWeatherByCoords(lat, lon);
+      const weatherResponse = await weatherService.getCurrentWeatherByCoords(
+        lat,
+        lon
+      );
 
       if (!weatherResponse.success || !weatherResponse.data) {
         throw new Error(
@@ -153,6 +259,10 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const transformedWeather = transformWeatherData(weatherResponse.data);
       setCurrentWeather(transformedWeather);
+      setCurrentLocation({
+        city: transformedWeather.name,
+        coords: { lat, lon },
+      });
 
       // Obtener pronóstico por coordenadas
       try {
@@ -177,6 +287,7 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Agregar a ciudades guardadas
       addToSavedCities(transformedWeather);
+      setLastUpdated(new Date());
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -189,30 +300,25 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const addToSavedCities = (weather: CurrentWeather) => {
-    const cityExists = savedCities.some(
-      (c) => c.name.toLowerCase() === weather.name.toLowerCase()
-    );
-
-    if (!cityExists) {
-      const newCity: SavedCity = {
-        name: weather.name,
-        country: "XX", // El backend no devuelve país en current weather
-        temp: Math.round(weather.temp),
-        weather: weather.weather,
-      };
-      setSavedCities((prev) => [newCity, ...prev].slice(0, 4));
-    }
-  };
-
   const switchToCity = async (city: string) => {
     await searchCity(city);
   };
 
-  const changeUnit = (unit: WeatherUnit) => {
-    setTempUnit(unit);
-    // Nota: Necesitaríamos volver a hacer la petición con la unidad correcta
-    // Por ahora solo cambiar la unidad de visualización
+  const refreshWeather = async () => {
+    if (!currentLocation) return;
+
+    if (currentLocation.coords) {
+      await searchByCoords(
+        currentLocation.coords.lat,
+        currentLocation.coords.lon
+      );
+    } else {
+      await searchCity(currentLocation.city);
+    }
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   return (
@@ -225,10 +331,16 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
         loading,
         error,
         tempUnit,
+        viewMode,
+        lastUpdated,
         searchCity,
         searchByCoords,
         switchToCity,
-        setTempUnit: changeUnit,
+        setTempUnit,
+        setViewMode,
+        refreshWeather,
+        clearError,
+        removeSavedCity,
       }}
     >
       {children}
